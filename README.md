@@ -1,2 +1,2 @@
 # h42-backup
-Backup manager for docker based on board
+Backup manager for docker based on borgbackup
