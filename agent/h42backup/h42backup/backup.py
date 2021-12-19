@@ -19,8 +19,11 @@ class backupConf:
             self.config.write(fd)
             fd.close()
 
+    @property
+    def profile(self):
+        return self.config['backup']['profile']
 
     def list(self):
-        return self.name.ljust(40) + '| ' + self.config.backup.profile
+        return self.name.ljust(30) + '| ' + self.profile
 
 

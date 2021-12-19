@@ -15,10 +15,10 @@ args = parser.parse_args()
 if 'backup' in args:
     if args.backup == 'list':
         list = backup_list()
-        for name in keys(list):
+        for name in list.keys():
             bck = backupConf(name)
             bck.load_container(list[name])
-            bck.write()
+            bck.save()
             print(bck.list())
     elif args.backup == 'full':
         pass
