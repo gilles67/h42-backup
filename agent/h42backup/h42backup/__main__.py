@@ -1,15 +1,17 @@
 #!/usr/bin/python3
-import argparse
-from container import backup_list
-from backup import backupConf 
+import argparse,json
+from container import backup_list, backup_run
+from backup import backupConf, borgConf
 
 parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(help='')
 
 parser_backup = subparsers.add_parser('backup', help='backup command')
-parser_backup.add_argument('backup', choices=['list', 'full', 'profile'])
+parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'profile'])
 parser_backup.add_argument('--profile', nargs='?')
 
+parser_borg = subparsers.add_parser('borg', help='borg command')
+parser_borg.add_argument('borg', choices=['init-config'])
 
 args = parser.parse_args()
 if 'backup' in args:
@@ -22,6 +24,18 @@ if 'backup' in args:
             print(bck.list())
     elif args.backup == 'full':
         pass
+    elif args.backup == 'run' and args.profile:
+        bck = backupConf(args.profile)
+        if not bck.exists():
+            sys.exit("Backup configuration file not exists !")
+        backup_run(bck)
     elif args.backup == 'profile':
         pass
-    
+    else:
+        print("🚧 Nothing todo !")
+        print(args)
+
+if 'borg' in args:
+    if args.borg == 'init-config':
+        brc = borgConf() 
+        print(json.dumps(brc.config, indent=4))

@@ -60,3 +60,17 @@ def backup_list():
 
     #print(json.dumps(bck, indent=4))
     return bck
+
+
+def backup_run(bck):
+    client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+    vols = bck.getVolumes()
+    ctr = client.containers.run(
+        image='h42-backup/agent',
+        command='/h42backup/h42-backup-agent backup profile --profile={}'.format(bck.profile),
+        auto_remove=True,
+        network_mode='bridge',
+        volumes=vols
+    )
+    return ctr
+
