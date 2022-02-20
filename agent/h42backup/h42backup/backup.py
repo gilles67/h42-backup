@@ -1,4 +1,5 @@
-import os, configparser, string, random
+import os, configparser, string, random, subprocess
+from datetime import datetime
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
@@ -22,7 +23,7 @@ class borgConf:
             self.config['borg']['passphrase'] = os.getenv('H42BACKUP_PASSPHRASE', password_generate())
             self.config['host']['name'] = os.getenv('H42BACKUP_HOSTNAME', 'myhost')
             if not os.path.isfile('/h42backup/config/id_ecdsa'):
-                os.system('ssh-keygen -t ed25519 -f /h42backup/config/id_ecdsa -N  ""')
+                subprocess.run('ssh-keygen -t ed25519 -f /h42backup/config/id_ecdsa -N  ""')
             self.save()
 
     def save(self):
@@ -31,10 +32,19 @@ class borgConf:
             fd.close()
 
     @property
+    def hostname(self):
+        return self.config['host']['name']
+
+    @property
+    def now(self):
+        return datetime.now.strftime('%Y%m%d-%H%M%S%Z')
+
+    @property
     def exists(self):
         return os.path.isfile(self.configfile) 
 
-
+    def create(self, bck):
+        print("Create backup {0}-{1}-{2} ".format(self.hostname, bck.profile, self.now))
 
 
 class backupConf:
@@ -66,12 +76,12 @@ class backupConf:
     def exists(self):
         return os.path.isfile(self.configfile)
 
-    def getVolumes(self, mode='backup'):
+    def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}}
         for mount in self.volumes:
             if mount.ignore == False:
                 continue
-            vols.update(mount.name={'bind': mount.dest, 'mode': 'ro'})
+            vols[mount.name] = {'bind': mount.dest, 'mode': 'ro'}
         return vols
 
     def list(self):

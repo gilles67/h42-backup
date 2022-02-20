@@ -7,5 +7,6 @@ all:
 	pip3 install -v -r /h42backup/requirements.txt
 
 	chmod a+x /h42backup/h42-backup-agent
+	chmod a+x /h42backup/inf-loop
 	mkdir /h42backup/config
 

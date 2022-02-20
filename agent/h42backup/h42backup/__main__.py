@@ -29,8 +29,15 @@ if 'backup' in args:
         if not bck.exists():
             sys.exit("Backup configuration file not exists !")
         backup_run(bck)
-    elif args.backup == 'profile':
-        pass
+    elif args.backup == 'profile' and args.profile:
+        brc = borgConf()
+        if not brc.exists():
+            sys.exit("Borg configuration file not exists !")
+        bck = backupConf(args.profile)
+        if not bck.exists():
+            sys.exit("Backup configuration file not exists !")
+        brc.create(bck)
+        
     else:
         print("🚧 Nothing todo !")
         print(args)
