@@ -24,17 +24,19 @@ if 'backup' in args:
             print(bck.list())
     elif args.backup == 'full':
         pass
+        
     elif args.backup == 'run' and args.profile:
         bck = backupConf(args.profile)
-        if not bck.exists():
+        if not bck.exists:
             sys.exit("Backup configuration file not exists !")
         backup_run(bck)
+
     elif args.backup == 'profile' and args.profile:
         brc = borgConf()
-        if not brc.exists():
+        if not brc.exists:
             sys.exit("Borg configuration file not exists !")
         bck = backupConf(args.profile)
-        if not bck.exists():
+        if not bck.exists:
             sys.exit("Backup configuration file not exists !")
         brc.create(bck)
         
@@ -45,4 +47,3 @@ if 'backup' in args:
 if 'borg' in args:
     if args.borg == 'init-config':
         brc = borgConf() 
-        print(json.dumps(brc.config, indent=4))

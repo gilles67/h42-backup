@@ -1,4 +1,4 @@
-import os, configparser, string, random, subprocess
+import os, yaml, string, random, subprocess
 from datetime import datetime
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
@@ -14,21 +14,25 @@ def password_generate(length=512):
 
 class borgConf:
     def __init__(self):
-        self.config = configparser.ConfigParser()
-        self.configfile = os.path.join(CONF_PATH, self.name + "borg.ini")
+        self.config = {}
+        self.configfile = os.path.join(CONF_PATH,"borg.yml")
         if self.exists:
-            self.config.read(self.configfile)
+            with open(self.configfile, 'r') as fd:
+                self.config = yaml.load(fd)
+                fd.close()
         else:
+            self.config['borg'] = {}
             self.config['borg']['repo'] = os.getenv('H42BACKUP_REPO', 'ssh://localhost:22/root/')
             self.config['borg']['passphrase'] = os.getenv('H42BACKUP_PASSPHRASE', password_generate())
+            self.config['host'] = {}
             self.config['host']['name'] = os.getenv('H42BACKUP_HOSTNAME', 'myhost')
             if not os.path.isfile('/h42backup/config/id_ecdsa'):
-                subprocess.run('ssh-keygen -t ed25519 -f /h42backup/config/id_ecdsa -N  ""')
+                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'ed25519', '-f', '/h42backup/config/id_ecdsa', '-N', '""'], check=True)
             self.save()
 
     def save(self):
         with open(self.configfile, 'w') as fd:
-            self.config.write(fd)
+            yaml.dump(self.config, fd)
             fd.close()
 
     @property
@@ -52,16 +56,18 @@ class backupConf:
     def __init__(self, name):
         self.name = name
         self.config = configparser.ConfigParser()
-        self.configfile = os.path.join(CONF_PATH, self.name + "-profile.ini")
+        self.configfile = os.path.join(CONF_PATH, self.name + "-profile.yml")
         if self.exists:
-            self.config.read(self.configfile)
+            with open(self.configfile, 'r') as fd:
+                self.config = yaml.load(fd)
+                fd.close()
 
     def load_container(self, data):
         self.config['backup'] = data
 
     def save(self):
         with open(self.configfile, 'w') as fd:
-            self.config.write(fd)
+            yaml.dump(self.config, fd)
             fd.close()
 
     @property
