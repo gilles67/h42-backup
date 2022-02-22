@@ -50,7 +50,7 @@ def backup_list():
                     mounts = ctb['mounts'] = []
                     for vol in ct.attrs['Mounts']:
                         if vol['Type'] == 'volume' and vol['Name'] == backup_volume:
-                            mounts.append({'type': 'volume', 'dest': vol['Destination'], 'name': vol['Name'] })
+                            mounts.append({'type': 'volume', 'dest': vol['Destination'], 'name': vol['Name'],'ignore': False  })
 
                     if len(mounts) == 0:
                         error.append('Mariadb: backup volume ' +  backup_volume +  ' not found in docker mount list.')
@@ -58,7 +58,6 @@ def backup_list():
             if len(error):
                 ctb['error'] = error
 
-    #print(json.dumps(bck, indent=4))
     return bck
 
 

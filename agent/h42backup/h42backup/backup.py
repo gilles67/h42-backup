@@ -55,8 +55,26 @@ class borgConfig(YamlConfigFile):
         return datetime.now.strftime('%Y%m%d-%H%M%S%Z')
 
     def create(self, bck):
-        print("Create backup {0}-{1}-{2} ".format(self.hostname, bck.profile, self.now))
-
+        bckname = "{0}-{1}-{2}".format(self.hostname, bck.profile, self.now)
+        print("Create backup {}.".format(bckname))
+        borgargs = [
+            '/usr/local/bin/borg',
+            '--verbose',
+            '--filter', 'AME',
+            '--list',
+            '--stats',
+            '--show-rc',
+            '--compression', 'lz4',
+            '--exclude-cache',
+            '--progress',
+            '--log-json',
+            ' ',
+            '::{}'.format(bckname),
+        ]
+        for vol in bck.volumes:
+            if vol.ignore == False:
+                borgargs.append(vol.dest)
+        subprocess.run(borgargs, check=True)
 
 class backupConfig(YamlConfigFile):
     
