@@ -5,8 +5,8 @@ LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
 class YamlConfigFile:
-    self.config = {}
-    self.configfile = None
+    config = {}
+    configfile = None
     
     def load(self):
         with open(self.configfile, 'r') as fd:
