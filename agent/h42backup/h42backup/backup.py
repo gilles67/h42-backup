@@ -7,15 +7,21 @@ NUMBERS = string.digits
 class YamlConfigFile:
     config = {}
     configfile = None
-    
+
     def load(self):
+        yload = yaml.Loader 
+        if yaml.CLoader:
+            yload = yaml.CLoader 
         with open(self.configfile, 'r') as fd:
-            self.config = yaml.load(fd)
+            self.config = yaml.load(fd, Loader=yload)
             fd.close()        
 
     def save(self):
+        ydump = yaml.Dumper 
+        if yaml.CDumper:
+            ydump = yaml.CDumper 
         with open(self.configfile, 'w') as fd:
-            yaml.dump(self.config, fd)
+            yaml.dump(self.config, fd, Dumper=ydump)
             fd.close()
 
     @property
@@ -81,6 +87,7 @@ class backupConfig(YamlConfigFile):
     def __init__(self, name):
         self.name = name
         self.configfile = os.path.join(CONF_PATH, self.name + "-profile.yml")
+        self.config['name'] = self.name
         if self.exists:
             self.load()
 

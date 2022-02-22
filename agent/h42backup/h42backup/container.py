@@ -66,7 +66,7 @@ def backup_run(bck):
     vols = bck.getDockerVolumes()
     ctr = client.containers.run(
         image='h42-backup/agent',
-        command='/h42backup/h42-backup-agent backup profile --profile={}'.format(bck.profile),
+        command='/h42backup/h42-backup-agent backup exec --name={}'.format(bck.name),
         auto_remove=True,
         network_mode='bridge',
         volumes=vols

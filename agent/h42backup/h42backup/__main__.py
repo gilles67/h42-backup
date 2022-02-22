@@ -7,8 +7,8 @@ parser = argparse.ArgumentParser()
 subparsers = parser.add_subparsers(help='')
 
 parser_backup = subparsers.add_parser('backup', help='backup command')
-parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'profile'])
-parser_backup.add_argument('--profile', nargs='?')
+parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'exec'])
+parser_backup.add_argument('--name', nargs='?')
 
 parser_borg = subparsers.add_parser('borg', help='borg command')
 parser_borg.add_argument('borg', choices=['init-config'])
@@ -25,13 +25,13 @@ if 'backup' in args:
     elif args.backup == 'full':
         pass
         
-    elif args.backup == 'run' and args.profile:
-        bck = backupConfig(args.profile)
+    elif args.backup == 'run' and args.name:
+        bck = backupConfig(args.name)
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
         backup_run(bck)
 
-    elif args.backup == 'profile' and args.profile:
+    elif args.backup == 'exec' and args.name:
         brc = borgConfig()
         if not brc.exists:
             sys.exit("Borg configuration file not exists !")
