@@ -4,6 +4,25 @@ CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
+class YamlConfigFile:
+    self.config = {}
+    self.configfile = None
+    
+    def load(self):
+        with open(self.configfile, 'r') as fd:
+            self.config = yaml.load(fd)
+            fd.close()        
+
+    def save(self):
+        with open(self.configfile, 'w') as fd:
+            yaml.dump(self.config, fd)
+            fd.close()
+
+    @property
+    def exists(self):
+        return os.path.isfile(self.configfile) 
+
+
 def password_generate(length=512):
     chars = f'{LETTERS}{NUMBERS}'
     chars = list(chars)
@@ -12,14 +31,11 @@ def password_generate(length=512):
     password = ''.join(password)
     return password
 
-class borgConf:
+class borgConfig(YamlConfigFile):
     def __init__(self):
-        self.config = {}
         self.configfile = os.path.join(CONF_PATH,"borg.yml")
         if self.exists:
-            with open(self.configfile, 'r') as fd:
-                self.config = yaml.load(fd)
-                fd.close()
+            self.load()
         else:
             self.config['borg'] = {}
             self.config['borg']['repo'] = os.getenv('H42BACKUP_REPO', 'ssh://localhost:22/root/')
@@ -30,11 +46,6 @@ class borgConf:
                 subprocess.run(['/usr/bin/ssh-keygen', '-t', 'ed25519', '-f', '/h42backup/config/id_ecdsa', '-N', '""'], check=True)
             self.save()
 
-    def save(self):
-        with open(self.configfile, 'w') as fd:
-            yaml.dump(self.config, fd)
-            fd.close()
-
     @property
     def hostname(self):
         return self.config['host']['name']
@@ -43,32 +54,20 @@ class borgConf:
     def now(self):
         return datetime.now.strftime('%Y%m%d-%H%M%S%Z')
 
-    @property
-    def exists(self):
-        return os.path.isfile(self.configfile) 
-
     def create(self, bck):
         print("Create backup {0}-{1}-{2} ".format(self.hostname, bck.profile, self.now))
 
 
-class backupConf:
+class backupConfig(YamlConfigFile):
     
     def __init__(self, name):
         self.name = name
-        self.config = configparser.ConfigParser()
         self.configfile = os.path.join(CONF_PATH, self.name + "-profile.yml")
         if self.exists:
-            with open(self.configfile, 'r') as fd:
-                self.config = yaml.load(fd)
-                fd.close()
+            self.load()
 
     def load_container(self, data):
         self.config['backup'] = data
-
-    def save(self):
-        with open(self.configfile, 'w') as fd:
-            yaml.dump(self.config, fd)
-            fd.close()
 
     @property
     def profile(self):
@@ -77,10 +76,6 @@ class backupConf:
     @property
     def volumes(self):
         return self.config['backup']['mounts']
-
-    @property
-    def exists(self):
-        return os.path.isfile(self.configfile)
 
     def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}}
