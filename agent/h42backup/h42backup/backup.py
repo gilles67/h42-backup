@@ -56,10 +56,21 @@ class borgConfig(YamlConfigFile):
         return self.config['host']['name']
 
     @property
+    def repo(self):
+        return self.config['borg']['repo']
+
+    @property
+    def passphrase(self):
+        return self.config['borg']['passphrase']
+
+    @property
     def now(self):
-        return datetime.now.strftime('%Y%m%d-%H%M%S%Z')
+        return datetime.now().strftime('%Y%m%d-%H%M%S%Z')
 
     def create(self, bck):
+        cmdenv = os.environ.copy()
+        cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
+
         bckname = "{0}-{1}-{2}".format(self.hostname, bck.profile, self.now)
         print("Create backup {}.".format(bckname))
         borgargs = [
@@ -77,9 +88,9 @@ class borgConfig(YamlConfigFile):
             '::{}'.format(bckname),
         ]
         for vol in bck.volumes:
-            if vol.ignore == False:
-                borgargs.append(vol.dest)
-        subprocess.run(borgargs, check=True)
+            if vol['ignore'] == False:
+                borgargs.append(vol['dest'])
+        subprocess.run(borgargs, check=True, env=cmdenv)
 
 class backupConfig(YamlConfigFile):
     
