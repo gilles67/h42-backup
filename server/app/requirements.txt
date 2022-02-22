@@ -1,0 +1,3 @@
+borgbackup == 1.1.17
+pyyaml == 6.0
+yachalk == 0.1.5
