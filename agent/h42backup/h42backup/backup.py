@@ -4,6 +4,14 @@ CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
+def password_generate(length=512):
+    chars = f'{LETTERS}{NUMBERS}'
+    chars = list(chars)
+    random.shuffle(chars)
+    password = random.choices(chars, k=length)
+    password = ''.join(password)
+    return password
+
 class YamlConfigFile:
     config = {}
     configfile = None
@@ -27,15 +35,6 @@ class YamlConfigFile:
     @property
     def exists(self):
         return os.path.isfile(self.configfile) 
-
-
-def password_generate(length=512):
-    chars = f'{LETTERS}{NUMBERS}'
-    chars = list(chars)
-    random.shuffle(chars)
-    password = random.choices(chars, k=length)
-    password = ''.join(password)
-    return password
 
 class borgConfig(YamlConfigFile):
     def __init__(self):
@@ -105,9 +104,9 @@ class backupConfig(YamlConfigFile):
     def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}}
         for mount in self.volumes:
-            if mount.ignore == False:
+            if mount['ignore'] == False:
                 continue
-            vols[mount.name] = {'bind': mount.dest, 'mode': 'ro'}
+            vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
         return vols
 
     def list(self):
