@@ -18,3 +18,11 @@ setup:
 	apt-get -y autoclean
 
 	chmod a+x /app/sshd-run
+
+	useradd -u 5000 -N -g 65534 borg
+	mkdir -p /home/borg/.ssh
+	chown -R borg:nogroup /home/borg
+	chmod -R 700 /home/borg
+
+	mkdir -p /backup
+	chown -R borg:nogroup /backup
