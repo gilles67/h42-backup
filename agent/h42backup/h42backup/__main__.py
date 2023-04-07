@@ -48,7 +48,7 @@ if 'borg' in args:
     brc = borgConfig()
     if args.borg == 'init-config':
         print("Configuration init !")
-    if args.borg == 'cexec-init-repo'
+    if args.borg == 'cexec-init-repo':
         brc.initRepo()
     if args.borg == 'public-key':
         print(brc.publicKey) 
