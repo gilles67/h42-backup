@@ -11,7 +11,7 @@ parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'exec'])
 parser_backup.add_argument('--name', nargs='?')
 
 parser_borg = subparsers.add_parser('borg', help='borg command')
-parser_borg.add_argument('borg', choices=['init-config'])
+parser_borg.add_argument('borg', choices=['init-config', 'public-key'])
 
 args = parser.parse_args()
 if 'backup' in args:
@@ -47,4 +47,8 @@ if 'backup' in args:
 if 'borg' in args:
     if args.borg == 'init-config':
         brc = borgConfig() 
+        print("Configuration init !")
+    if args.borg == 'public-key':
+        brc = borgConfig() 
+        print(brc.publicKey) 
 

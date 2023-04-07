@@ -17,4 +17,4 @@ COPY --from=base /opt/wheels /opt/wheels
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends make && make -C /h42backup setup
 
-CMD ["/h42backup/inf-loop"]
+CMD ["/h42backup/h42-backup-agent"]

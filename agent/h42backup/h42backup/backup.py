@@ -47,8 +47,8 @@ class borgConfig(YamlConfigFile):
             self.config['borg']['passphrase'] = os.getenv('H42BACKUP_PASSPHRASE', password_generate())
             self.config['host'] = {}
             self.config['host']['name'] = os.getenv('H42BACKUP_HOSTNAME', 'myhost')
-            if not os.path.isfile('/h42backup/config/id_ecdsa'):
-                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'ed25519', '-f', '/h42backup/config/id_ecdsa', '-N', '""'], check=True)
+            if not os.path.isfile('/root/.ssh/id_rsa'):
+                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'rsa', '-b', '4096', '-f', '/root/.ssh/id_rsa', '-N', '""'], check=True)
             self.save()
 
     @property
@@ -66,6 +66,14 @@ class borgConfig(YamlConfigFile):
     @property
     def now(self):
         return datetime.now().strftime('%Y%m%d-%H%M%S%Z')
+
+    @property
+    def publicKey(self):
+        publickey = None
+        with open('/root/.ssh/id_rsa.pub', 'r') as fd:
+            publickey = fd.readall()
+            fd.close()
+        return publickey
 
     def create(self, bck):
         cmdenv = os.environ.copy()
