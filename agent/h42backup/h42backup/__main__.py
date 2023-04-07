@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import argparse,json
-from container import backup_list, backup_run
+from container import backup_list, backup_run, container_exec
 from backup import backupConfig, borgConfig
 
 parser = argparse.ArgumentParser()
@@ -11,7 +11,7 @@ parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'exec'])
 parser_backup.add_argument('--name', nargs='?')
 
 parser_borg = subparsers.add_parser('borg', help='borg command')
-parser_borg.add_argument('borg', choices=['init-config', 'public-key'])
+parser_borg.add_argument('borg', choices=['init-config', 'public-key', 'init-repo', 'cexec-init-repo'])
 
 args = parser.parse_args()
 if 'backup' in args:
@@ -45,10 +45,12 @@ if 'backup' in args:
         print(args)
 
 if 'borg' in args:
+    brc = borgConfig()
     if args.borg == 'init-config':
-        brc = borgConfig() 
         print("Configuration init !")
+    if args.borg == 'cexec-init-repo'
+        brc.initRepo()
     if args.borg == 'public-key':
-        brc = borgConfig() 
         print(brc.publicKey) 
-
+    if args.borg == 'init-repo':
+        print(h42backup_agent_run("/h42backup/h42-backup-agent borg cexec-init-repo").readall())

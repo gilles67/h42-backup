@@ -65,13 +65,13 @@ class borgConfig(YamlConfigFile):
 
     @property
     def now(self):
-        return datetime.now().strftime('%Y%m%d-%H%M%S%Z')
+        return datetime.now().strftime('%Y%m%d')
 
     @property
     def publicKey(self):
         publickey = None
         with open('/root/.ssh/id_rsa.pub', 'r') as fd:
-            publickey = fd.readall()
+            publickey = fd.readlines()[0].strip()
             fd.close()
         return publickey
 
@@ -100,6 +100,17 @@ class borgConfig(YamlConfigFile):
                 borgargs.append(vol['dest'])
         subprocess.run(borgargs, check=True, env=cmdenv)
 
+    def initRepo(self):
+        cmdenv = os.environ.copy()
+        cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
+        borgargs = [
+            '/usr/local/bin/borg',
+            'init',
+            '--encryption', 'repokey'
+        ]
+        subprocess.run(borgargs, check=True, env=cmdenv)
+        
+
 class backupConfig(YamlConfigFile):
     
     def __init__(self, name):
@@ -121,7 +132,7 @@ class backupConfig(YamlConfigFile):
         return self.config['backup']['mounts']
 
     def getDockerVolumes(self, mode='backup'):
-        vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}}
+        vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
             if mount['ignore'] == False:
                 continue
