@@ -129,7 +129,7 @@ class backupConfig(YamlConfigFile):
 
     @property
     def archive(self):
-        return "{1}-{2}".format(self.name.replace('.','-'), self.profile)
+        return "{0}-{1}".format(self.name.replace('.','-'), self.profile)
     
     @property
     def volumes(self):
@@ -138,9 +138,11 @@ class backupConfig(YamlConfigFile):
     def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
+            print(mount)
             if 'ignore' in mount and mount['ignore'] == False:
                 continue
-            vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
+            if 'name' in mount:
+                vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
         return vols
 
     def list(self):
