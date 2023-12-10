@@ -1,6 +1,7 @@
-import docker, json
+import docker, json, os
 
 VALID_PROFILE = ['volume', 'mariadb']
+CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 
 def backup_list():
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
