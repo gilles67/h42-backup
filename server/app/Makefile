@@ -17,6 +17,8 @@ setup:
 	apt-get -y clean
 	apt-get -y autoclean
 
+	rm -rf /opt/wheels
+
 	chmod a+x /app/sshd-run
 
 	useradd -u 5000 -N -g 65534 borg
