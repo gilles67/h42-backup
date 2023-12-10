@@ -17,6 +17,8 @@ setup:
 	apt-get -y clean
 	apt-get -y autoclean
 
+	rm -rf /opt/wheels
+
 	chmod a+x /h42backup/h42-backup-agent
 	chmod a+x /h42backup/inf-loop
 	mkdir /h42backup/config

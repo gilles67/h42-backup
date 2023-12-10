@@ -48,7 +48,7 @@ class borgConfig(YamlConfigFile):
             self.config['host'] = {}
             self.config['host']['name'] = os.getenv('H42BACKUP_HOSTNAME', 'myhost')
             if not os.path.isfile('/root/.ssh/id_rsa'):
-                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'rsa', '-b', '4096', '-f', '/root/.ssh/id_rsa', '-N', '""'], check=True)
+                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'rsa', '-b', '4096', '-f', '/root/.ssh/id_rsa', '-N', ''], check=True)
             self.save()
 
     @property
@@ -79,24 +79,24 @@ class borgConfig(YamlConfigFile):
         cmdenv = os.environ.copy()
         cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
 
-        bckname = "{0}-{1}-{2}".format(self.hostname, bck.profile, self.now)
+        bckname = "{0}-{1}-{2}".format(self.hostname, bck.archive, self.now)
         print("Create backup {}.".format(bckname))
         borgargs = [
             '/usr/local/bin/borg',
+            'create',
             '--verbose',
-            '--filter', 'AME',
+            '--filter=AME',
             '--list',
             '--stats',
             '--show-rc',
-            '--compression', 'lz4',
+            '--compression=lz4',
             '--exclude-cache',
             '--progress',
             '--log-json',
-            ' ',
             '::{}'.format(bckname),
         ]
         for vol in bck.volumes:
-            if vol['ignore'] == False:
+            if 'ignore' in vol and vol['ignore'] == False:
                 borgargs.append(vol['dest'])
         subprocess.run(borgargs, check=True, env=cmdenv)
 
@@ -126,6 +126,10 @@ class backupConfig(YamlConfigFile):
     @property
     def profile(self):
         return self.config['backup']['profile']
+
+    @property
+    def archive(self):
+        return "{1}-{2}".format(self.name.replace('.','-'), self.profile)
     
     @property
     def volumes(self):
@@ -134,7 +138,7 @@ class backupConfig(YamlConfigFile):
     def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
-            if mount['ignore'] == False:
+            if 'ignore' in mount and mount['ignore'] == False:
                 continue
             vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
         return vols
