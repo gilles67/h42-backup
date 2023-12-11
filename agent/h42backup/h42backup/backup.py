@@ -1,4 +1,4 @@
-import os, yaml, string, random, subprocess
+import os, yaml, string, random, subprocess, logging, threading
 from datetime import datetime
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
@@ -11,6 +11,35 @@ def password_generate(length=512):
     password = random.choices(chars, k=length)
     password = ''.join(password)
     return password
+
+
+class LogPipe(threading.Thread):
+
+    def __init__(self, level=logging.INFO):
+        threading.Thread.__init__(self)
+        self.daemon = False
+        self.level = level
+        self.fdRead, self.fdWrite = os.pipe()
+        self.pipeReader = os.fdopen(self.fdRead)
+        self.start()
+
+    def fileno(self):
+        """Return the write file descriptor of the pipe
+        """
+        return self.fdWrite
+
+    def run(self):
+        """Run the thread, logging everything.
+        """
+        for line in iter(self.pipeReader.readline, ''):
+            logging.log(self.level, line.strip('\n'))
+
+        self.pipeReader.close()
+
+    def close(self):
+        """Close the write end of the pipe.
+        """
+        os.close(self.fdWrite)
 
 class YamlConfigFile:
     config = {}
@@ -78,9 +107,10 @@ class borgConfig(YamlConfigFile):
     def create(self, bck):
         cmdenv = os.environ.copy()
         cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
-
         bckname = "{0}-{1}-{2}".format(self.hostname, bck.archive, self.now)
         print("Create backup {}.".format(bckname))
+        logging.basicConfig(level=logging.INFO,filename="{0}/logs/{1}.log".format(CONF_PATH, bckname))
+
         borgargs = [
             '/usr/local/bin/borg',
             'create',
@@ -92,13 +122,15 @@ class borgConfig(YamlConfigFile):
             '--compression=lz4',
             '--exclude-cache',
             '--progress',
-            '--log-json',
             '::{}'.format(bckname),
         ]
         for vol in bck.volumes:
             if 'ignore' in vol and vol['ignore'] == False:
                 borgargs.append(vol['dest'])
-        subprocess.run(borgargs, check=True, env=cmdenv)
+
+        lpipe = LogPipe()
+        with subprocess.Popen(borgargs, check=True, env=cmdenv, stdout=lpipe, stderr=lpipe):
+            lpipe.close()
 
     def initRepo(self):
         cmdenv = os.environ.copy()
