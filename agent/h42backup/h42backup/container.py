@@ -34,7 +34,9 @@ def backup_list():
 
                 mounts = ctb['mounts'] = []
                 for vol in ct.attrs['Mounts']:
-                    ignore = vol['Name'] in vol_ignore
+                    ignore = True
+                    if 'Name' in vol:
+                        ignore = vol['Name'] in vol_ignore
                     if vol['Type'] == 'bind' and include_bind:
                         mounts.append({'type': 'bind', 'dest': vol['Destination'], 'ignore': ignore})
                     if vol['Type'] == 'volume':

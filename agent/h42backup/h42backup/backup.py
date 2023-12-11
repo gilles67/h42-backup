@@ -162,7 +162,10 @@ class backupConfig(YamlConfigFile):
 
     @property
     def archive(self):
-        return "{0}-{1}".format(self.name.replace('.','-'), self.profile)
+        if self.profile == "volume":
+            return "{0}-{1}".format(self.name.replace('.','-'), self.profile)
+        else:
+            return self.name.replace('.','-')
     
     @property
     def volumes(self):
