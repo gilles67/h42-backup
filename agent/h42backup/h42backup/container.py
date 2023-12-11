@@ -74,7 +74,7 @@ def h42backup_agent_run(cmd, volumes={}):
         image='gilles67/h42-backup-agent',
         command=cmd,
         auto_remove=True,
-        network_mode='host',
+        network='bridge',
         volumes=vols
     )
     return ctr

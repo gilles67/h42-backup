@@ -1,6 +1,7 @@
 import os, yaml, string, random, subprocess, logging, threading
 from datetime import datetime
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
+LOG_PATH = os.getenv("H42BACKUP_LOGPATH", "/h42backup/logs")
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
@@ -109,7 +110,7 @@ class borgConfig(YamlConfigFile):
         cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
         bckname = "{0}-{1}-{2}".format(self.hostname, bck.archive, self.now)
         print("Create backup {}.".format(bckname))
-        logging.basicConfig(level=logging.INFO,filename="{0}/logs/{1}.log".format(CONF_PATH, bckname))
+        logging.basicConfig(level=logging.INFO,filename="{0}/{1}.log".format(LOG_PATH, bckname))
 
         borgargs = [
             '/usr/local/bin/borg',
