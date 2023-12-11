@@ -130,7 +130,7 @@ class borgConfig(YamlConfigFile):
                 borgargs.append(vol['dest'])
 
         lpipe = LogPipe()
-        with subprocess.Popen(borgargs, check=True, env=cmdenv, stdout=lpipe, stderr=lpipe):
+        with subprocess.Popen(borgargs, env=cmdenv, stdout=lpipe, stderr=lpipe):
             lpipe.close()
 
     def initRepo(self):
