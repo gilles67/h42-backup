@@ -74,9 +74,9 @@ def h42backup_agent_run(cmd, config, volumes={}):
     vols.update(volumes)
 
     netconf = client.api.create.create_networking_config({
-        config.worker['network']: client.api.create_endpoint_config({
+        config.worker['network']: client.api.create_endpoint_config(
             ipv6_address=config.worker['ipv6']
-        })
+        )
     })
 
     ctr = client.containers.run(
