@@ -11,7 +11,7 @@ parser_backup.add_argument('backup', choices=['list', 'run', 'full', 'exec'])
 parser_backup.add_argument('--name', nargs='?')
 
 parser_borg = subparsers.add_parser('borg', help='borg command')
-parser_borg.add_argument('borg', choices=['init-config', 'public-key', 'init-repo', 'cexec-init-repo'])
+parser_borg.add_argument('borg', choices=['init-config', 'public-key', 'init-repo'])
 
 args = parser.parse_args()
 if 'backup' in args:
@@ -26,10 +26,11 @@ if 'backup' in args:
         pass
         
     elif args.backup == 'run' and args.name:
+        brc = borgConfig()
         bck = backupConfig(args.name)
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
-        print(backup_run(bck).readall())
+        print(backup_run(bck, brc).readall())
 
     elif args.backup == 'exec' and args.name:
         brc = borgConfig()
@@ -48,9 +49,8 @@ if 'borg' in args:
     brc = borgConfig()
     if args.borg == 'init-config':
         print("Configuration init !")
-    if args.borg == 'cexec-init-repo':
-        brc.initRepo()
     if args.borg == 'public-key':
         print(brc.publicKey) 
     if args.borg == 'init-repo':
-        print(h42backup_agent_run("/h42backup/h42-backup-agent borg cexec-init-repo").readall())
+        brc.initRepo()
+

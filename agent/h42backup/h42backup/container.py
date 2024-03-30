@@ -64,19 +64,26 @@ def backup_list():
     return bck
 
 
-def backup_run(bck):
+def backup_run(bck, config):
     vols = bck.getDockerVolumes()
-    return h42backup_agent_run('/h42backup/h42-backup-agent backup exec --name={}'.format(bck.name), vols)
+    return h42backup_agent_run('/h42backup/h42-backup-agent backup exec --name={}'.format(bck.name), config, vols)
 
-def h42backup_agent_run(cmd, volumes={}):
+def h42backup_agent_run(cmd, config, volumes={}):
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
     vols.update(volumes)
+
+    netconf = client.api.create.create_networking_config({
+        config.worker['network']: client.api.create_endpoint_config({
+            ipv6_address=config.worker['ipv6']
+        })
+    })
+
     ctr = client.containers.run(
         image='gilles67/h42-backup-agent',
         command=cmd,
         auto_remove=True,
-        network='bridge',
+        networking_config=netconf
         volumes=vols
     )
     return ctr

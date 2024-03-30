@@ -74,10 +74,13 @@ class borgConfig(YamlConfigFile):
             self.config['borg'] = {}
             self.config['borg']['repo'] = os.getenv('H42BACKUP_REPO', 'ssh://localhost:22/root/')
             self.config['borg']['passphrase'] = os.getenv('H42BACKUP_PASSPHRASE', password_generate())
+            self.config['worker'] = {}
+            self.config['worker']['network'] = os.getenv('H42BACKUP_NETWORK')
+            self.config['worker']['ipv6'] = os.getenv('H42BACKUP_WORKER')
             self.config['host'] = {}
             self.config['host']['name'] = os.getenv('H42BACKUP_HOSTNAME', 'myhost')
             if not os.path.isfile('/root/.ssh/id_rsa'):
-                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'rsa', '-b', '4096', '-f', '/root/.ssh/id_rsa', '-N', ''], check=True)
+                subprocess.run(['/usr/bin/ssh-keygen', '-t', 'rsa', '-b', '4096', '-f', '/root/.ssh/id_rsa', '-N', '""'], check=True)
             self.save()
 
     @property
@@ -91,6 +94,10 @@ class borgConfig(YamlConfigFile):
     @property
     def passphrase(self):
         return self.config['borg']['passphrase']
+
+    @property
+    def worker(self):
+        return self.config['worker']
 
     @property
     def now(self):
