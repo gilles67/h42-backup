@@ -83,7 +83,7 @@ def h42backup_agent_run(cmd, config, volumes={}):
         image='gilles67/h42-backup-agent',
         command=cmd,
         auto_remove=True,
-        networking_config=netconf
+        networking_config=netconf,
         volumes=vols
     )
     return ctr
