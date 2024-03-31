@@ -1,6 +1,7 @@
 #!/usr/bin/python3
-import argparse,json
-from container import backup_list, backup_run, h42backup_agent_run
+import sys
+import argparse
+from container import backup_list, backup_run
 from backup import backupConfig, borgConfig
 
 parser = argparse.ArgumentParser()
@@ -16,15 +17,14 @@ parser_borg.add_argument('borg', choices=['init-config', 'public-key', 'init-rep
 args = parser.parse_args()
 if 'backup' in args:
     if args.backup == 'list':
-        list = backup_list()
-        for name in list.keys():
+        bck_list = backup_list()
+        for name in bck_list:
             bck = backupConfig(name)
             bck.load_container(list[name])
             bck.save()
             print(bck.list())
     elif args.backup == 'full':
-        pass
-        
+        pass  
     elif args.backup == 'run' and args.name:
         brc = borgConfig()
         bck = backupConfig(args.name)
@@ -40,7 +40,7 @@ if 'backup' in args:
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
         brc.create(bck)
-        
+
     else:
         print("🚧 Nothing todo !")
         print(args)
@@ -50,7 +50,6 @@ if 'borg' in args:
     if args.borg == 'init-config':
         print("Configuration init !")
     if args.borg == 'public-key':
-        print(brc.publicKey) 
+        print(brc.publicKey)
     if args.borg == 'init-repo':
         brc.initRepo()
-
