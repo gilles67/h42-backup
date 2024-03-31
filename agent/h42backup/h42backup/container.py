@@ -1,4 +1,6 @@
-import docker, json, os
+import os
+#import json
+import docker
 
 VALID_PROFILE = ['volume', 'mariadb']
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
@@ -58,7 +60,7 @@ def backup_list():
                     if len(mounts) == 0:
                         error.append('Mariadb: backup volume ' +  backup_volume +  ' not found in docker mount list.')
             
-            if len(error):
+            if error:
                 ctb['error'] = error
 
     return bck
@@ -66,14 +68,16 @@ def backup_list():
 
 def backup_run(bck, config):
     vols = bck.getDockerVolumes()
-    return h42backup_agent_run('/h42backup/h42-backup-agent backup exec --name={}'.format(bck.name), config, vols)
+    return h42backup_agent_run(f'/h42backup/h42-backup-agent backup exec --name={bck.name}', config, vols)
 
-def h42backup_agent_run(cmd, config, volumes={}):
+def h42backup_agent_run(cmd, config, volumes=None):
+    if volumes is None:
+        volumes = {}
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
     vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
     vols.update(volumes)
 
-    netconf = client.api.create.create_networking_config({
+    netconf = client.api.create_networking_config({
         config.worker['network']: client.api.create_endpoint_config(
             ipv6_address=config.worker['ipv6']
         )

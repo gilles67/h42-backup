@@ -1,5 +1,13 @@
-import os, yaml, string, random, subprocess, logging, threading
+import os
+import string
+import random
+import subprocess
+import logging
+import threading
 from datetime import datetime
+
+import yaml
+
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
@@ -46,18 +54,18 @@ class YamlConfigFile:
     configfile = None
 
     def load(self):
-        yload = yaml.Loader 
+        yload = yaml.Loader
         if yaml.CLoader:
-            yload = yaml.CLoader 
-        with open(self.configfile, 'r') as fd:
+            yload = yaml.CLoader
+        with open(self.configfile, 'r', encoding="utf-8") as fd:
             self.config = yaml.load(fd, Loader=yload)
-            fd.close()        
+            fd.close()
 
     def save(self):
-        ydump = yaml.Dumper 
+        ydump = yaml.Dumper
         if yaml.CDumper:
-            ydump = yaml.CDumper 
-        with open(self.configfile, 'w') as fd:
+            ydump = yaml.CDumper
+        with open(self.configfile, 'w', encoding="utf-8") as fd:
             yaml.dump(self.config, fd, Dumper=ydump)
             fd.close()
 
@@ -106,7 +114,7 @@ class borgConfig(YamlConfigFile):
     @property
     def publicKey(self):
         publickey = None
-        with open('/root/.ssh/id_rsa.pub', 'r') as fd:
+        with open('/root/.ssh/id_rsa.pub', 'r', encoding="utf-8") as fd:
             publickey = fd.readlines()[0].strip()
             fd.close()
         return publickey
@@ -114,9 +122,9 @@ class borgConfig(YamlConfigFile):
     def create(self, bck):
         cmdenv = os.environ.copy()
         cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
-        bckname = "{0}-{1}-{2}".format(self.hostname, bck.archive, self.now)
-        print("Create backup {}.".format(bckname))
-        logging.basicConfig(level=logging.INFO,filename="{0}/logs/{1}.log".format(CONF_PATH, bckname))
+        bckname = f"{self.hostname}-{bck.archive}-{self.now}"
+        print(f"Create backup {bckname}.")
+        logging.basicConfig(level=logging.INFO,filename=f"{CONF_PATH}/logs/{bckname}.log")
 
         borgargs = [
             '/usr/local/bin/borg',
@@ -129,10 +137,10 @@ class borgConfig(YamlConfigFile):
             '--compression=lz4',
             '--exclude-cache',
             '--progress',
-            '::{}'.format(bckname),
+            f'::{bckname}',
         ]
         for vol in bck.volumes:
-            if 'ignore' in vol and vol['ignore'] == False:
+            if 'ignore' in vol and not vol['ignore']:
                 borgargs.append(vol['dest'])
 
         lpipe = LogPipe()
@@ -169,7 +177,8 @@ class backupConfig(YamlConfigFile):
     @property
     def archive(self):
         if self.profile == "volume":
-            return "{0}-{1}".format(self.name.replace('.','-'), self.profile)
+            name = self.name.replace('.','-')
+            return f"{name}-{self.profile}"
         else:
             return self.name.replace('.','-')
     
@@ -181,7 +190,7 @@ class backupConfig(YamlConfigFile):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
             print(mount)
-            if 'ignore' in mount and mount['ignore'] == False:
+            if 'ignore' in mount and not mount['ignore']:
                 continue
             if 'name' in mount:
                 vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
