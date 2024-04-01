@@ -24,14 +24,12 @@ if 'backup' in args:
             bck.save()
             print(bck.list())
     elif args.backup == 'full':
-        pass  
+        pass
     elif args.backup == 'run' and args.name:
-        brc = borgConfig()
         bck = backupConfig(args.name)
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
-        print(backup_run(bck, brc).readall())
-
+        print(backup_run(bck))
     elif args.backup == 'exec' and args.name:
         brc = borgConfig()
         if not brc.exists:
@@ -40,7 +38,6 @@ if 'backup' in args:
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
         brc.create(bck)
-
     else:
         print("🚧 Nothing todo !")
         print(args)

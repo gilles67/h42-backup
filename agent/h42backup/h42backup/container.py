@@ -43,14 +43,12 @@ def backup_list():
                         mounts.append({'type': 'bind', 'dest': vol['Destination'], 'ignore': ignore})
                     if vol['Type'] == 'volume':
                         mounts.append({'type': 'volume', 'dest': vol['Destination'], 'name': vol['Name'], 'ignore': ignore })
-            
             if profile == 'mariadb':
                 backup_volume = None
                 if 'one.h42.backup.mariadb.volume' in ct.labels:
                     backup_volume = ctb['mariadb_backup_volume'] = ct.labels['one.h42.backup.mariadb.volume']
                 else:
                     error.append('Mariadb: backup volume not define, "one.h42.backup.mariadb.volume" docker label not exists or is empty.')
-
                 if backup_volume:
                     mounts = ctb['mounts'] = []
                     for vol in ct.attrs['Mounts']:
@@ -59,38 +57,35 @@ def backup_list():
 
                     if len(mounts) == 0:
                         error.append('Mariadb: backup volume ' +  backup_volume +  ' not found in docker mount list.')
-            
             if error:
                 ctb['error'] = error
 
     return bck
 
 
-def backup_run(bck, config):
+def backup_run(bck):
     vols = bck.getDockerVolumes()
-    return h42backup_agent_run(f'/h42backup/h42-backup-agent backup exec --name={bck.name}', config, vols)
+    return h42backup_agent_run(f'/h42backup/h42-backup-agent backup exec --name={bck.name}', vols)
 
-def h42backup_agent_run(cmd, config, volumes=None):
+def h42backup_agent_run(cmd, volumes=None):
     if volumes is None:
         volumes = {}
     client = docker.DockerClient(base_url='unix://var/run/docker.sock')
-    vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
+    vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'rw'},
+             'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
     vols.update(volumes)
-
-    netconf = client.api.create_networking_config({
-        config.worker['network']: client.api.create_endpoint_config(
-            ipv6_address=config.worker['ipv6']
-        )
-    })
-
+    print(vols)
     ctr = client.containers.run(
         image='gilles67/h42-backup-agent',
         command=cmd,
-        auto_remove=True,
-        networking_config=netconf,
-        volumes=vols
+        volumes=vols,
+        remove=True,
+        detach=True
     )
 
+    try:
+        ctr.wait()
+    except docker.errors.ContainerError as err:
+        print(err)
 
-    
     return ctr
