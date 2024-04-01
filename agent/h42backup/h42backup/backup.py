@@ -1,4 +1,5 @@
 import os
+import os.path
 import string
 import random
 import subprocess
@@ -8,7 +9,9 @@ from datetime import datetime
 
 import yaml
 
+BASE_BORG = os.getenv("BORG_BASEDIR", "/h42backup/backup")
 CONF_PATH = os.getenv("H42BACKUP_CONFPATH", "/h42backup/config")
+LOG_PATH = os.path.join(CONF_PATH,'logs')
 LETTERS = string.ascii_letters
 NUMBERS = string.digits
 
@@ -27,27 +30,27 @@ class LogPipe(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = False
         self.level = level
-        self.fdRead, self.fdWrite = os.pipe()
-        self.pipeReader = os.fdopen(self.fdRead)
+        self.fd_read, self.fd_write = os.pipe()
+        self.pipe_reader = os.fdopen(self.fd_read)
         self.start()
 
     def fileno(self):
         """Return the write file descriptor of the pipe
         """
-        return self.fdWrite
+        return self.fd_write
 
     def run(self):
         """Run the thread, logging everything.
         """
-        for line in iter(self.pipeReader.readline, ''):
+        for line in iter(self.pipe_reader.readline, ''):
             logging.log(self.level, line.strip('\n'))
 
-        self.pipeReader.close()
+        self.pipe_reader.close()
 
     def close(self):
         """Close the write end of the pipe.
         """
-        os.close(self.fdWrite)
+        os.close(self.fd_write)
 
 class YamlConfigFile:
     config = {}
@@ -71,7 +74,7 @@ class YamlConfigFile:
 
     @property
     def exists(self):
-        return os.path.isfile(self.configfile) 
+        return os.path.isfile(self.configfile)
 
 class borgConfig(YamlConfigFile):
     def __init__(self):
@@ -113,12 +116,22 @@ class borgConfig(YamlConfigFile):
         return publickey
 
     def create(self, bck):
-        cmdenv = os.environ.copy()
-        cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase)
-        bckname = f"{self.hostname}-{bck.archive}-{self.now}"
-        print(f"Create backup {bckname}.")
-        logging.basicConfig(level=logging.INFO,filename=f"{CONF_PATH}/logs/{bckname}.log")
 
+        if not os.path.isdir(BASE_BORG):
+            os.mkdir(BASE_BORG)
+        if not os.path.isdir(LOG_PATH):
+            os.mkdir(LOG_PATH)
+
+        cmdenv = os.environ.copy()
+        cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase, BORG_BASE_DIR=BASE_BORG)
+        logname = f"{self.hostname}-{bck.archive}"
+        bckname = f"{logname}-{self.now}"
+
+        print(f"Create backup {bckname}.")
+        logging.basicConfig(level=logging.INFO,
+                            filename=f"{LOG_PATH}/{logname}.log",
+                            format="%(asctime)s [%(levelname)s]: %(message)s",
+                            datefmt="%Y-%m-%dT%H:%M:%S")
         borgargs = [
             '/usr/local/bin/borg',
             'create',
@@ -180,7 +193,7 @@ class backupConfig(YamlConfigFile):
         return self.config['backup']['mounts']
 
     def getDockerVolumes(self, mode='backup'):
-        vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'ro'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
+        vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'rw'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
             print(mount)
             if 'ignore' in mount and not mount['ignore']:
