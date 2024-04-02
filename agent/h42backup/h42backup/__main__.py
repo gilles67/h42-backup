@@ -20,7 +20,7 @@ if 'backup' in args:
         bck_list = backup_list()
         for name in bck_list:
             bck = backupConfig(name)
-            bck.load_container(list[name])
+            bck.load_container(bck_list[name])
             bck.save()
             print(bck.list())
     elif args.backup == 'full':

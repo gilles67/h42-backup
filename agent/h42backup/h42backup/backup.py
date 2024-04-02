@@ -195,7 +195,6 @@ class backupConfig(YamlConfigFile):
     def getDockerVolumes(self, mode='backup'):
         vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'rw'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
         for mount in self.volumes:
-            print(mount)
             if 'ignore' in mount and not mount['ignore']:
                 continue
             if 'name' in mount:

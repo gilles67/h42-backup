@@ -74,7 +74,6 @@ def h42backup_agent_run(cmd, volumes=None):
     vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'rw'},
              'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
     vols.update(volumes)
-    print(vols)
     ctr = client.containers.run(
         image='gilles67/h42-backup-agent',
         command=cmd,
@@ -82,10 +81,8 @@ def h42backup_agent_run(cmd, volumes=None):
         remove=True,
         detach=True
     )
-
     try:
         ctr.wait()
     except docker.errors.ContainerError as err:
         print(err)
-
     return ctr
