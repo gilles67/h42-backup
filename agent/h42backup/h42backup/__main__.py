@@ -29,6 +29,8 @@ if 'backup' in args:
         bck = backupConfig(args.name)
         if not bck.exists:
             sys.exit("Backup configuration file not exists !")
+        if bck.is_lock:
+            sys.exit(f"Backup {args.name} is locked !")
         print(backup_run(bck))
     elif args.backup == 'exec' and args.name:
         brc = borgConfig()

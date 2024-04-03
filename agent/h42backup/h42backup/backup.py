@@ -116,12 +116,10 @@ class borgConfig(YamlConfigFile):
         return publickey
 
     def create(self, bck):
-
         if not os.path.isdir(BASE_BORG):
             os.mkdir(BASE_BORG)
         if not os.path.isdir(LOG_PATH):
             os.mkdir(LOG_PATH)
-
         cmdenv = os.environ.copy()
         cmdenv.update(BORG_REPO=self.repo, BORG_PASSPHRASE=self.passphrase, BORG_BASE_DIR=BASE_BORG)
         logname = f"{self.hostname}-{bck.archive}"
@@ -147,11 +145,11 @@ class borgConfig(YamlConfigFile):
         ]
         for vol in bck.volumes:
             if 'ignore' in vol and not vol['ignore']:
-                borgargs.append(vol['dest'])
-
+                borgargs.append(vol['dst'])
         lpipe = LogPipe()
         with subprocess.Popen(borgargs, env=cmdenv, stdout=lpipe, stderr=lpipe):
             lpipe.close()
+        bck.unlock()
 
     def initRepo(self):
         cmdenv = os.environ.copy()
@@ -162,13 +160,14 @@ class borgConfig(YamlConfigFile):
             '--encryption', 'repokey'
         ]
         subprocess.run(borgargs, check=True, env=cmdenv)
-        
+
 
 class backupConfig(YamlConfigFile):
-    
+
     def __init__(self, name):
         self.name = name
         self.configfile = os.path.join(CONF_PATH, self.name + "-profile.yml")
+        self.lockfile = os.path.join(CONF_PATH, self.name + ".lock")
         self.config['name'] = self.name
         if self.exists:
             self.load()
@@ -187,20 +186,32 @@ class backupConfig(YamlConfigFile):
             return f"{name}-{self.profile}"
         else:
             return self.name.replace('.','-')
-    
+
     @property
     def volumes(self):
         return self.config['backup']['mounts']
 
-    def getDockerVolumes(self, mode='backup'):
-        vols = {'h42backup_agent_config': {'bind': CONF_PATH, 'mode': 'rw'}, 'h42backup_agent_root': {'bind': '/root', 'mode': 'ro'}}
-        for mount in self.volumes:
-            if 'ignore' in mount and not mount['ignore']:
-                continue
-            if 'name' in mount:
-                vols[mount['name']] = {'bind': mount['dest'], 'mode': 'ro'}
+    @property
+    def is_lock(self):
+        return os.path.isfile(self.lockfile)
+
+    def getDockerVolumes(self):
+        vols = self.volumes.copy()
+        vols.append({'type': 'volume', 'name': 'h42backup_agent_config', 'dst': CONF_PATH, 'ignore': False, 'mode': 'rw'})
+        vols.append({'type': 'volume', 'name': 'h42backup_agent_root', 'dst': '/root', 'ignore': False, 'mode': 'ro'})
         return vols
 
-    def list(self):
-        return self.name.ljust(30) + '| ' + self.profile
+    def lock(self, container_name):
+        with open(self.lockfile, mode="w", encoding="utf-8") as f:
+            f.write(container_name)
+            f.close()
 
+    def unlock(self):
+        if self.is_lock:
+            os.remove(self.lockfile)
+
+    def list(self):
+        if self.is_lock:
+            return self.name.ljust(30) + '| ' + self.profile + ' (locked)'
+        else:
+            return self.name.ljust(30) + '| ' + self.profile
