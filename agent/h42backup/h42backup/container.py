@@ -37,7 +37,6 @@ def backup_list():
 
                 mounts = ctb['mounts'] = []
                 for vol in ct.attrs['Mounts']:
-                    print(vol)
                     ignore = True
                     if 'Name' in vol:
                         ignore = vol['Name'] in vol_ignore
@@ -58,7 +57,7 @@ def backup_list():
                         if vol['Type'] == 'volume' and vol['Name'] == backup_volume:
                             mounts.append({'type': 'volume', 'dst': vol['Destination'], 'name': vol['Name'],'ignore': False , 'mode':'rw'})
                     if len(mounts) == 0:
-                        error.append('Mariadb: backup volume ' +  backup_volume +  ' not found in docker mount list.')
+                        error.append(f'Mariadb: backup volume {backup_volume} not found in docker mount list.')
             if error:
                 ctb['error'] = error
 
@@ -66,10 +65,19 @@ def backup_list():
 
 
 def backup_run(bck):
+    if bck.profile == "mariadb":
+        client = docker.DockerClient(base_url='unix://var/run/docker.sock')
+        cte = client.containers.get(bck.name)
+        cte.exec_run("/bin/bash -c \"mariabackup --backup --target-dir=/var/backup/ --user=root --password=$MYSQL_ROOT_PASSWORD\"")
+        client.close()
+
     vols = bck.getDockerVolumes()
     ctr = h42backup_agent_run(f'/h42backup/h42-backup-agent backup exec --name={bck.name}', vols)
     bck.lock(ctr.name)
     return ctr
+
+
+
 
 def h42backup_agent_run(cmd, volumes=None):
     mnts = []

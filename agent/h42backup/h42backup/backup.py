@@ -149,6 +149,11 @@ class borgConfig(YamlConfigFile):
         lpipe = LogPipe()
         with subprocess.Popen(borgargs, env=cmdenv, stdout=lpipe, stderr=lpipe):
             lpipe.close()
+
+        if bck.profile == "mariadb":
+            logging.info("Purge mariadb backup folder")
+            subprocess.run("rm -r /var/backup/*", check=True)
+
         bck.unlock()
 
     def initRepo(self):
