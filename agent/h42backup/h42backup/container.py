@@ -63,7 +63,6 @@ def backup_list():
 
     return bck
 
-
 def backup_run(bck):
     if bck.profile == "mariadb":
         client = docker.DockerClient(base_url='unix://var/run/docker.sock')
@@ -75,9 +74,6 @@ def backup_run(bck):
     ctr = h42backup_agent_run(f'/h42backup/h42-backup-agent backup exec --name={bck.name}', vols)
     bck.lock(ctr.name)
     return ctr
-
-
-
 
 def h42backup_agent_run(cmd, volumes=None):
     mnts = []

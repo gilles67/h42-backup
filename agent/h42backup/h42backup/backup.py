@@ -147,12 +147,21 @@ class borgConfig(YamlConfigFile):
             if 'ignore' in vol and not vol['ignore']:
                 borgargs.append(vol['dst'])
         lpipe = LogPipe()
-        with subprocess.Popen(borgargs, env=cmdenv, stdout=lpipe, stderr=lpipe):
-            lpipe.close()
 
-        if bck.profile == "mariadb":
-            logging.info("Purge mariadb backup folder")
-            subprocess.run("rm -r /var/backup/*", check=True)
+        # Main backup exec
+        try:
+            with subprocess.Popen(borgargs, env=cmdenv, stdout=lpipe, stderr=lpipe):
+                lpipe.close()
+        except Exception as err:
+            logging.error(err)
+
+        # Post backup exec
+        try:
+            if bck.profile == "mariadb":
+                logging.info("Purge mariadb backup folder")
+                subprocess.run("rm -r /var/backup/*", check=True)
+        except Exception as err:
+            logging.error(err)
 
         bck.unlock()
 
