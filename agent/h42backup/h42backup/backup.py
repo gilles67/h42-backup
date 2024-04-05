@@ -159,7 +159,7 @@ class borgConfig(YamlConfigFile):
         try:
             if bck.profile == "mariadb":
                 logging.info("Purge mariadb backup folder")
-                subprocess.run("rm -r /var/backup/*", check=True)
+                subprocess.run("/bin/rm -r /var/backup/*", check=True)
         except Exception as err:
             logging.error(err)
 
