@@ -40,6 +40,8 @@ def backup_list():
                     ignore = True
                     if 'Name' in vol:
                         ignore = vol['Name'] in vol_ignore
+                    if vol['Destination'] == "/root":
+                        vol['Destination'] = "/root-alt"
                     if vol['Type'] == 'bind' and include_bind:
                         mounts.append({'type': 'bind', 'dst': vol['Destination'], 'src': vol['Source'], 'ignore': False, 'mode':'rw'})
                     if vol['Type'] == 'volume':
