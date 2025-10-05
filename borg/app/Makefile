@@ -8,7 +8,7 @@ wheels:
 setup:
 	apt-get update -y
 	apt-get upgrade -y
-	apt-get install -y --no-install-recommends python3 python3-distlib python3-pip openssl libacl1 fuse liblz4-1 libzstd1 libxxhash0
+	apt-get install -y --no-install-recommends python3 python3-distlib python3-pip openssl libacl1 fuse liblz4-1 libzstd1 libxxhash0 openssh-client curl
 	apt-get -y autoremove
 	apt-get clean
 	pip3 install -v --no-index --find-links=/opt/wheels -r /app/requirements.txt --break-system-packages

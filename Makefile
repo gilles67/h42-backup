@@ -14,5 +14,3 @@ all:
 	docker build -t gilles67/h42-backup-borg:latest -t gilles67/h42-backup-borg:$(GITPACK_VERSION) ./borg
 	docker push gilles67/h42-backup-borg:latest 
 	docker push gilles67/h42-backup-borg:$(GITPACK_VERSION)
-
-
