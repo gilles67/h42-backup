@@ -20,4 +20,8 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends make && make
 
 HEALTHCHECK CMD curl -f http://localhost/health
 
+EXPOSE 80
+
+VOLUME /var/backup
+
 CMD ["fastapi", "run", "/app/main.py", "--proxy-headers", "--port", "80", "--workers", "4"]
